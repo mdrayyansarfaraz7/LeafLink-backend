@@ -1,0 +1,27 @@
+{
+  "name": "leaflink-backend",
+  "version": "1.0.0",
+  "description": "LeafLink Backend — A scalable Express.js + MongoDB backend for managing multi-nursery inventory, sales, and analytics. Handles role-based access for managers and cashiers, real-time stock tracking, and profit insights across plants, tools, containers, and fertilizers.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mdrayyansarfaraz7/LeafLink-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mdrayyansarfaraz7/LeafLink-backend/issues"
+  },
+  "homepage": "https://github.com/mdrayyansarfaraz7/LeafLink-backend#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "jsonwebtoken": "^9.0.2",
+    "nodemon": "^3.1.10"
+  }
+}
