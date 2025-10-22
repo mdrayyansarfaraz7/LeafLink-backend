@@ -5,7 +5,6 @@ const userSchema = new mongoose.Schema(
     nursery: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Nursery",
-      required: true,
     },
     fullName: {
       type: String,
@@ -20,7 +19,7 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function() { return this.isActive; }, 
       select: false,
     },
     role: {
@@ -30,8 +29,10 @@ const userSchema = new mongoose.Schema(
     },
     isActive: {
       type: Boolean,
-      default: true,
+      default: false,
     },
+    inviteCode: String, 
+    invitedAt: Date,
   },
   { timestamps: true }
 );

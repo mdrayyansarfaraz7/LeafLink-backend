@@ -11,6 +11,7 @@ const nurserySchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    cashiers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
   },
   { timestamps: true }
 );
