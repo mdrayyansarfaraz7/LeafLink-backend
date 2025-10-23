@@ -1,36 +1,40 @@
 import mongoose from "mongoose";
 
-const nurserySchema = new mongoose.Schema(
+const transactionSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
-    address: { type: String },
-    contactNumber: { type: String },
-    email: { type: String },
-
-    manager: {
+    nursery: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Nursery",
       required: true,
     },
-
-    cashiers: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "User" }
-    ],
-
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true, // who performed the transaction (manager/cashier)
+    },
+    type: {
+      type: String,
+      enum: ["sale", "purchase", "expense"], // sale = customer payment, purchase = bought stock, expense = misc
+      required: true,
+    },
     items: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Item" }
+      {
+        item: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },
+        quantity: { type: Number, required: true },
+        price: { type: Number, required: true }, // price per unit
+      },
     ],
-
-    stockLogs: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "StockLog" }
-    ],
-
-    transactions: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" }
-    ]
+    totalAmount: { type: Number, required: true },
+    paymentMode: {
+      type: String,
+      enum: ["cash", "card", "upi", "other"],
+      default: "cash",
+    },
+    note: { type: String }, // optional description
+    performedAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
 
-const Nursery = mongoose.model("Nursery", nurserySchema);
-export default Nursery;
+const Transaction = mongoose.model("Transaction", transactionSchema);
+export default Transaction;

@@ -1,5 +1,5 @@
-import Item from "../models/itemModel.js";
-import Nursery from "../models/nurseryModel.js";
+import Item from "../models/Item.js";
+import Nursery from "../models/Nursery.js";
 
 export const createItem = async (req, res) => {
   const { nurseryId, name, itemCode, category, subCategory, price, quantity, unit, season, imageUrl } = req.body;

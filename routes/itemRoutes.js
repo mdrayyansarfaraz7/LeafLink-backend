@@ -11,16 +11,13 @@ const router = express.Router();
 
 router.post("/", createItem);
 
-
 router.get("/nursery/:nurseryId", getItemsByNursery);
 
-// Get a single item by ID
 router.get("/:id", getItemById);
 
-// Update an item by ID
 router.put("/:id", updateItem);
 
-// Delete an item by ID
+
 router.delete("/:id", deleteItem);
 
 export default router;

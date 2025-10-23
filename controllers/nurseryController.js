@@ -1,7 +1,7 @@
-import Nursery from "../models/nurseryModel.js";
-import Item from "../models/itemModel.js";
-import Transaction from "../models/transactionModel.js";
-import StockLog from "../models/stockLogModel.js";
+import Nursery from "../models/Nursery.js";
+import Item from "../models/Item.js";
+import Transaction from "../models/Transaction.js";
+import StockLog from "../models/StockLog.js";
 
 // Get detailed nursery info
 export const getNurseryDetails = async (req, res) => {

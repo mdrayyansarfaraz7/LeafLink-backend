@@ -1,6 +1,6 @@
 import express from "express";
 import { getNurseryDetails, getNurseryOverview } from "../controllers/nurseryController.js";
-import { verifyUser } from "../middlewares/verifyUser.js";
+import { verifyUser } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 

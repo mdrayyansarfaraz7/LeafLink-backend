@@ -6,12 +6,28 @@ const nurserySchema = new mongoose.Schema(
     address: { type: String },
     contactNumber: { type: String },
     email: { type: String },
+
     manager: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    cashiers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
+
+    cashiers: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "User" }
+    ],
+
+    items: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Item" }
+    ],
+
+    stockLogs: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "StockLog" }
+    ],
+
+    transactions: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" }
+    ]
   },
   { timestamps: true }
 );
