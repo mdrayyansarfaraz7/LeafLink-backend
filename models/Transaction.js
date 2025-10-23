@@ -1,37 +1,36 @@
 import mongoose from "mongoose";
 
-const transactionSchema = new mongoose.Schema(
+const nurserySchema = new mongoose.Schema(
   {
-    nursery: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Nursery",
-      required: true,
-    },
-    cashier: {
+    name: { type: String, required: true },
+    address: { type: String },
+    contactNumber: { type: String },
+    email: { type: String },
+
+    manager: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    item: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Item",
-    },
-    amount: { type: Number, required: true },
-    quantity: { type: Number },
-    type: {
-      type: String,
-      enum: ["sale", "expense"],
-      required: true,
-    },
-    paymentMethod: {
-      type: String,
-      enum: ["cash", "upi", "card"],
-      default: "cash",
-    },
-    date: { type: Date, default: Date.now },
+
+    cashiers: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "User" }
+    ],
+
+    items: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Item" }
+    ],
+
+    stockLogs: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "StockLog" }
+    ],
+
+    transactions: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" }
+    ]
   },
   { timestamps: true }
 );
 
-const Transaction = mongoose.model("Transaction", transactionSchema);
-export default Transaction;
+const Nursery = mongoose.model("Nursery", nurserySchema);
+export default Nursery;
