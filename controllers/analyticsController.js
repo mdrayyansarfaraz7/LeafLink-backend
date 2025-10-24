@@ -1,15 +1,23 @@
-import StockLog from "../models/StockLog.js";
+import Transaction from "../models/Transaction.js";
 import Item from "../models/Item.js";
+import mongoose from "mongoose";
 
-// 1. Monthly Revenue
+// Helper to convert nurseryId to ObjectId
+const toObjectId = (id) => new mongoose.Types.ObjectId(id);
+
+// ---------------------------
+// 1️⃣ Monthly Revenue
+// ---------------------------
 export const getMonthlyRevenue = async (req, res) => {
   try {
-    const revenue = await StockLog.aggregate([
-      { $match: { action: "purchased" } },
+    const nurseryId = req.user.nursery;
+
+    const revenue = await Transaction.aggregate([
+      { $match: { nursery: toObjectId(nurseryId) } },
       {
         $group: {
-          _id: { year: { $year: "$performedAt" }, month: { $month: "$performedAt" } },
-          totalRevenue: { $sum: "$amount" },
+          _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+          totalRevenue: { $sum: "$totalAmount" },
         },
       },
       { $sort: { "_id.year": 1, "_id.month": 1 } },
@@ -22,21 +30,29 @@ export const getMonthlyRevenue = async (req, res) => {
         },
       },
     ]);
-    res.json(revenue);
+
+    console.log("Monthly revenue aggregation result:", revenue);
+    res.status(200).json(revenue);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ msg: "Failed to fetch monthly revenue", error });
   }
 };
 
-// 2. Monthly Items Sold
+// ---------------------------
+// 2️⃣ Monthly Items Sold
+// ---------------------------
 export const getMonthlyItemsSold = async (req, res) => {
   try {
-    const sold = await StockLog.aggregate([
-      { $match: { action: "purchased" } },
+    const nurseryId = req.user.nursery;
+
+    const itemsSold = await Transaction.aggregate([
+      { $match: { nursery: toObjectId(nurseryId) } },
+      { $unwind: "$items" },
       {
         $group: {
-          _id: { year: { $year: "$performedAt" }, month: { $month: "$performedAt" } },
-          totalQuantitySold: { $sum: "$quantityChanged" },
+          _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+          totalQuantitySold: { $sum: "$items.quantity" },
         },
       },
       { $sort: { "_id.year": 1, "_id.month": 1 } },
@@ -49,23 +65,34 @@ export const getMonthlyItemsSold = async (req, res) => {
         },
       },
     ]);
-    res.json(sold);
+
+    console.log("Monthly items sold aggregation result:", itemsSold);
+    res.status(200).json(itemsSold);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ msg: "Failed to fetch monthly items sold", error });
   }
 };
 
-// 3. Top Selling Items
+// ---------------------------
+// 3️⃣ Top Selling Items
+// ---------------------------
 export const getTopSellingItems = async (req, res) => {
   try {
-    const topItems = await StockLog.aggregate([
-      { $match: { action: "purchased" } },
+    const nurseryId = req.user.nursery;
+
+    const topItems = await Transaction.aggregate([
+      { $match: { nursery: toObjectId(nurseryId) } },
+      { $unwind: "$items" },
       {
         $group: {
-          _id: "$item",
-          totalQuantitySold: { $sum: "$quantityChanged" },
+          _id: "$items.item",
+          totalQuantitySold: { $sum: "$items.quantity" },
+          totalSales: { $sum: "$items.priceAtSale" }, // sum of price at sale per item
         },
       },
+      { $sort: { totalQuantitySold: -1 } },
+      { $limit: 5 },
       {
         $lookup: {
           from: "items",
@@ -75,85 +102,127 @@ export const getTopSellingItems = async (req, res) => {
         },
       },
       { $unwind: "$itemDetails" },
-      { $sort: { totalQuantitySold: -1 } },
-      { $limit: 5 },
       {
         $project: {
-          itemCode: "$itemDetails.itemCode",
           name: "$itemDetails.name",
+          itemCode: "$itemDetails.itemCode",
           totalQuantitySold: 1,
+          totalSales: 1,
         },
       },
     ]);
-    res.json(topItems);
+
+    console.log("Top selling items aggregation result:", topItems);
+    res.status(200).json(topItems);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ msg: "Failed to fetch top selling items", error });
   }
 };
 
-// 4. Current Stock Levels
+// ---------------------------
+// 4️⃣ Current Stock Levels
+// ---------------------------
 export const getCurrentStockLevels = async (req, res) => {
   try {
-    const stockLevels = await StockLog.aggregate([
-      {
-        $group: {
-          _id: "$item",
-          totalAdded: { $sum: { $cond: [{ $eq: ["$action", "added"] }, "$quantityChanged", 0] } },
-          totalPurchased: { $sum: { $cond: [{ $eq: ["$action", "purchased"] }, "$quantityChanged", 0] } },
-          totalRemoved: { $sum: { $cond: [{ $eq: ["$action", "removed"] }, "$quantityChanged", 0] } },
-        },
-      },
-      {
-        $project: {
-          currentStock: { $subtract: ["$totalAdded", { $add: ["$totalPurchased", "$totalRemoved"] }] },
-        },
-      },
-      {
-        $lookup: {
-          from: "items",
-          localField: "_id",
-          foreignField: "_id",
-          as: "itemDetails",
-        },
-      },
-      { $unwind: "$itemDetails" },
-      { $project: { itemCode: "$itemDetails.itemCode", name: "$itemDetails.name", currentStock: 1 } },
-    ]);
-    res.json(stockLevels);
+    const nurseryId = req.user.nursery;
+
+    const items = await Item.find({ nursery: nurseryId }, "name itemCode quantity").lean();
+
+    const formatted = items.map((item) => ({
+      name: item.name,
+      itemCode: item.itemCode,
+      currentStock: item.quantity,
+    }));
+
+    console.log("Current stock levels:", formatted);
+    res.status(200).json(formatted);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ msg: "Failed to fetch current stock levels", error });
   }
 };
 
-// 5. Monthly Profit/Loss
+// ---------------------------
+// 5️⃣ Monthly Profit/Loss
+// ---------------------------
 export const getMonthlyProfitLoss = async (req, res) => {
   try {
-    const profitLoss = await StockLog.aggregate([
+    const nurseryId = req.user.nursery;
+
+    const profitLoss = await Transaction.aggregate([
+      { $match: { nursery: toObjectId(nurseryId) } },
       {
         $group: {
-          _id: { year: { $year: "$performedAt" }, month: { $month: "$performedAt" }, action: "$action" },
-          totalAmount: { $sum: "$amount" },
+          _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+          totalProfit: { $sum: "$totalProfit" },
+          totalRevenue: { $sum: "$totalAmount" },
         },
       },
-      {
-        $group: {
-          _id: { year: "$_id.year", month: "$_id.month" },
-          totalSales: { $sum: { $cond: [{ $eq: ["$_id.action", "purchased"] }, "$totalAmount", 0] } },
-          totalCost: { $sum: { $cond: [{ $eq: ["$_id.action", "added"] }, "$totalAmount", 0] } },
-        },
-      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
       {
         $project: {
           year: "$_id.year",
           month: "$_id.month",
-          profitLoss: { $subtract: ["$totalSales", "$totalCost"] },
+          totalRevenue: 1,
+          totalProfit: 1,
           _id: 0,
         },
       },
-      { $sort: { year: 1, month: 1 } },
     ]);
-    res.json(profitLoss);
+
+    console.log("Monthly profit/loss aggregation result:", profitLoss);
+    res.status(200).json(profitLoss);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ msg: "Failed to fetch monthly profit/loss", error });
+  }
+};
+
+// ---------------------------
+// 6️⃣ Profit/Loss for Specific Month
+// ---------------------------
+export const getProfitLossForMonth = async (req, res) => {
+  try {
+    const nurseryId = req.user.nursery;
+    const { year, month } = req.params;
+
+    const startDate = new Date(`${year}-${month}-01T00:00:00.000Z`);
+    const endDate = new Date(`${year}-${parseInt(month) + 1}-01T00:00:00.000Z`);
+
+    const result = await Transaction.aggregate([
+      {
+        $match: {
+          nursery: toObjectId(nurseryId),
+          createdAt: { $gte: startDate, $lt: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalProfit: { $sum: "$totalProfit" },
+          totalRevenue: { $sum: "$totalAmount" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalProfit: 1,
+          totalRevenue: 1,
+        },
+      },
+    ]);
+
+    console.log(`Profit/loss aggregation for ${year}-${month}:`, result);
+
+    res.status(200).json({
+      year: parseInt(year),
+      month: parseInt(month),
+      profitLoss: result[0]?.totalProfit || 0,
+      totalRevenue: result[0]?.totalRevenue || 0,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Failed to fetch profit/loss for month", error });
   }
 };

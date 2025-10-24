@@ -227,7 +227,7 @@ export const loginUser = async (req, res) => {
     res
       .cookie("authToken", token, cookieOptions)
       .status(200)
-      .json({ msg: "Login successful", user });
+      .json({ msg: "Login successful", user,token });
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: "Login failed", error: error.message });

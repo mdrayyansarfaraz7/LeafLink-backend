@@ -5,13 +5,12 @@ import Nursery from "../models/Nursery.js";
 // Create a new stock log
 export const createStockLog = async (req, res) => {
   const { itemId, action, quantityChanged, amount, note } = req.body;
-  const nurseryId = req.user.nursery; // user must be linked to nursery
+  const nurseryId = req.user.nursery; 
 
   try {
     const item = await Item.findById(itemId);
     if (!item) return res.status(404).json({ msg: "Item not found" });
 
-    // Create stock log
     const log = await StockLog.create({
       item: item._id,
       nursery: nurseryId,

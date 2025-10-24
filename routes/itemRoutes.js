@@ -9,7 +9,7 @@ import {
 
 const router = express.Router();
 
-router.post("/", createItem);
+router.post("/add", createItem);
 
 router.get("/nursery/:nurseryId", getItemsByNursery);
 

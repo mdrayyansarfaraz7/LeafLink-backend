@@ -11,7 +11,7 @@ import userRoutes from "./routes/userRoutes.js";
 import itemRoutes from "./routes/itemRoutes.js";
 import stockRoutes from "./routes/stockRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
-
+import transactionRoutes from "./routes/transactionRoutes.js";
 
 
 dotenv.config();
@@ -32,6 +32,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/stock", stockRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/transactions", transactionRoutes);
 
 // Root route
 app.get("/", (req, res) => {

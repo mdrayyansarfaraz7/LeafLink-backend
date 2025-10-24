@@ -33,6 +33,7 @@ export const isManager = (req, res, next) => {
 };
 
 export const isCashier = (req, res, next) => {
+  console.log("User:", req.user);
   if (req.user.role !== "cashier") {
     return res.status(403).json({ msg: "Access denied, cashier only" });
   }

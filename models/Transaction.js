@@ -2,36 +2,18 @@ import mongoose from "mongoose";
 
 const transactionSchema = new mongoose.Schema(
   {
-    nursery: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Nursery",
-      required: true,
-    },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true, // who performed the transaction (manager/cashier)
-    },
-    type: {
-      type: String,
-      enum: ["sale", "purchase", "expense"], // sale = customer payment, purchase = bought stock, expense = misc
-      required: true,
-    },
+    nursery: { type: mongoose.Schema.Types.ObjectId, ref: "Nursery", required: true },
+    cashier: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     items: [
       {
-        item: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },
+        item: { type: mongoose.Schema.Types.ObjectId, ref: "Item", required: true },
         quantity: { type: Number, required: true },
-        price: { type: Number, required: true }, // price per unit
+        priceAtSale: { type: Number, required: true }, 
       },
     ],
     totalAmount: { type: Number, required: true },
-    paymentMode: {
-      type: String,
-      enum: ["cash", "card", "upi", "other"],
-      default: "cash",
-    },
-    note: { type: String }, // optional description
-    performedAt: { type: Date, default: Date.now },
+    totalProfit: { type: Number, default: 0 },
+    paymentMethod: { type: String, enum: ["cash", "card", "upi"], default: "cash" },
   },
   { timestamps: true }
 );

@@ -16,6 +16,7 @@ const itemSchema = new mongoose.Schema(
     },
     subCategory: { type: String },
     price: { type: Number, required: true },
+    costPrice: { type: Number, required: true },
     quantity: { type: Number, required: true },
     unit: { type: String, enum: ["pcs", "kg"], default: "pcs" },
     season: { type: String },
