@@ -3,10 +3,27 @@ import Nursery from "../models/Nursery.js";
 import StockLog from "../models/StockLog.js";
 
 export const createItem = async (req, res) => {
-  const { nurseryId, name, itemCode, category, subCategory,costPrice, price, quantity, unit, season, imageUrl } = req.body;
+  const {
+    nurseryId,
+    name,
+    itemCode,
+    category,
+    subCategory,
+    costPrice,
+    price,
+    quantity,
+    unit,
+    season,
+  } = req.body;
 
   try {
-    // Create the item
+    const imageUrl = req.file.path;
+
+    if (!imageUrl) {
+      return res.status(400).json({ msg: "Image upload failed or missing." });
+    }
+
+    // Create new item
     const newItem = await Item.create({
       nursery: nurseryId,
       name,
@@ -21,26 +38,34 @@ export const createItem = async (req, res) => {
       imageUrl,
     });
 
-    // Push the item into the nursery's item list
+    // Add item reference to nursery
     await Nursery.findByIdAndUpdate(nurseryId, { $push: { items: newItem._id } });
 
-    // Create a stock log entry for initial addition
-    const newStrock =await StockLog.create({
+    // Create initial stock log
+    const stockLog = await StockLog.create({
       nursery: nurseryId,
       item: newItem._id,
       action: "added",
       quantityChanged: quantity,
       amount: costPrice * quantity,
-      performedBy: req.user?._id || null, 
+      performedBy: req.user?._id || null,
       note: "Initial stock added when item was created",
     });
 
-   await Nursery.findByIdAndUpdate(nurseryId, { $push: { stockLogs: newStrock._id } });
+    // Link stock log to nursery
+    await Nursery.findByIdAndUpdate(nurseryId, { $push: { stockLogs: stockLog._id } });
 
-    res.status(201).json({ msg: "Item added successfully", item: newItem, stockLog: newStrock });
+    res.status(201).json({
+      msg: "Item added successfully",
+      item: newItem,
+      stockLog,
+    });
   } catch (error) {
     console.error("Error creating item:", error);
-    res.status(500).json({ msg: "Failed to add item", error: error.message });
+    res.status(500).json({
+      msg: "Failed to add item",
+      error: error.message,
+    });
   }
 };
 
